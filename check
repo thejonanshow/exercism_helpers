@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+
+language = ARGV[0]
+filename = ".#{language}.list"
+
+unless File.exists? filename
+  puts "No list found for '#{language}', try again."
+  exit
+end
+
+exercises = File.read(filename).split
+
+exercises.each do |exercise|
+  directory = "#{language}/#{exercise}" 
+
+  next unless File.exists? directory
+
+  Dir.chdir(directory) do
+    system "cargo", "test", :out => File::NULL, :err => File::NULL
+
+    if $?.success?
+      puts "✅ #{exercise} complete"
+    else
+      puts "⛔️ #{exercise} incomplete"
+      exit
+    end
+  end
+end

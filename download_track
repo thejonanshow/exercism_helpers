@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require "net/http"
+
+language = ARGV[0]
+
+url = URI("https://exercism.org/tracks/#{language}/exercises")
+
+response = Net::HTTP.get_response(url)
+
+if response.code_type == Net::HTTPNotFound
+  puts "No track found for '#{language}', try again."
+  exit
+end
+
+lines = response.body.split.select do |line|
+  line.include? "/tracks/#{language}/exercises/"
+end
+
+exercises = lines.map do |line|
+  line.split("/tracks/#{language}/exercises").last.split("&").first[1..-1]
+end
+
+File.write(".#{language}.list", exercises.join("\n"))
+
+exercises.each do |exercise|
+  puts "⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓⎓"
+  puts "Downloading #{exercise}..."
+  out = `exercism download --track=#{language} --exercise=#{exercise}`
+
+  unless out.empty?
+    puts out
+    puts "✅"
+  else
+    puts "⛔️"
+  end
+end
